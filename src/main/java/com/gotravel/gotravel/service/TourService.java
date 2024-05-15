@@ -6,21 +6,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.gotravel.gotravel.converter.ScheduleConverter;
+import com.gotravel.gotravel.converter.ScheduleDetailConverter;
 import com.gotravel.gotravel.converter.TourConverter;
 import com.gotravel.gotravel.dto.CategoryDTO;
 import com.gotravel.gotravel.dto.ImageDTO;
 import com.gotravel.gotravel.dto.RuleDTO;
 import com.gotravel.gotravel.dto.ScheduleDTO;
+import com.gotravel.gotravel.dto.ScheduleDetailDTO;
 import com.gotravel.gotravel.dto.TourDTO;
 import com.gotravel.gotravel.dto.UtilitiesDTO;
 import com.gotravel.gotravel.entity.Category;
 import com.gotravel.gotravel.entity.Image;
 import com.gotravel.gotravel.entity.Rule;
 import com.gotravel.gotravel.entity.Schedule;
+import com.gotravel.gotravel.entity.ScheduleDetail;
 import com.gotravel.gotravel.entity.Tour;
 import com.gotravel.gotravel.entity.TourCategory;
 import com.gotravel.gotravel.entity.TourRule;
@@ -68,9 +73,12 @@ public class TourService implements ITourService {
 
 	@Autowired
 	private ScheduleRepository scheduleRepository;
-	
+
 	@Autowired
 	private TourRuleReposiitory tourRuleReposiitory;
+	
+	@Autowired
+	private ScheduleConverter scheduleConverter;
 
 	@Override
 	public List<TourDTO> findAll() {
@@ -114,7 +122,21 @@ public class TourService implements ITourService {
 		// LỊCH TRÌNH
 		List<Schedule> schedules = new ArrayList<>();
 		for (ScheduleDTO s : tourDTO.getSchedules()) {
-			schedules.add(new Schedule(s.getScheduleId(), s.getActivity(), s.getDate(), tour));
+
+			Schedule schedule = new Schedule();
+			schedule.setDate(s.getDate());
+			schedule.setTour(tour);
+			
+			List<ScheduleDetail> activities = new ArrayList<>();
+			for (ScheduleDetailDTO ac : s.getActivities()) {
+				ScheduleDetail activity = new ScheduleDetail();
+				activity.setContext(ac.getContext());
+				activity.setSchedule(schedule);
+				activities.add(activity);
+			}
+			schedule.setActivities(activities);
+			schedules.add(schedule);
+
 		}
 
 		// LOAI TOUR
@@ -177,7 +199,7 @@ public class TourService implements ITourService {
 			Tour existingTour = tourOp.get();
 			Tour tourUpdate = tourConverter.toEntity(updateTourDTO);
 
-			existingTour.setTourId(existingTour.getTourId());
+//			existingTour.setTourId(existingTour.getTourId());
 			existingTour.setTourName(tourUpdate.getTourName());
 			existingTour.setDescription(tourUpdate.getDescription());
 			existingTour.setThumbnail(tourUpdate.getThumbnail());
@@ -207,7 +229,7 @@ public class TourService implements ITourService {
 		List<TourRule> rulesToMove = new ArrayList<>();
 		List<TourUtilities> utilitiesToMove = new ArrayList<>();
 		List<Image> imagesToRemove = new ArrayList<>();
-		List<Schedule> scheduleRemove = new ArrayList<>();
+		List<Schedule> schedulesToRemove = new ArrayList<>();
 
 		// CHECK IMAGES
 		for (Image existingImage : existingTour.getImages()) {
@@ -246,40 +268,93 @@ public class TourService implements ITourService {
 				existingTour.getImages().add(newImage);
 			}
 		}
+		
+		// check update
+		
+		 for (Schedule existingSchedule : existingTour.getSchedules()) {
+		        boolean existsInUpdate = updateTourDTO.getSchedules().stream()
+		                .anyMatch(scheduleDTO -> scheduleDTO.getDate() == existingSchedule.getDate()
+		                        && scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
+		                        && scheduleDTO.getActivities().stream()
+		                        .allMatch(activityDTO -> existingSchedule.getActivities().stream()
+		                                .anyMatch(activity -> activity.getContext().equals(activityDTO.getContext()))));
+
+		        if (!existsInUpdate) {
+		            scheduleRepository.delete(existingSchedule);
+		            schedulesToRemove.add(existingSchedule);
+		        }
+		    }
+		    existingTour.getSchedules().removeAll(schedulesToRemove);
+
+		    for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
+		        boolean exist = existingTour.getSchedules().stream()
+		                .anyMatch(existingSchedule -> scheduleDTO.getDate() == existingSchedule.getDate()
+		                        && scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
+		                        && scheduleDTO.getActivities().stream()
+		                        .allMatch(activityDTO -> existingSchedule.getActivities().stream()
+		                                .anyMatch(activity -> activity.getContext().equals(activityDTO.getContext()))));
+
+		        if (!exist) {
+		            Schedule newSchedule = new Schedule();
+		            newSchedule.setTour(existingTour);
+		            newSchedule.setDate(scheduleDTO.getDate());
+
+		            List<ScheduleDetail> scheduleDetails = scheduleDTO.getActivities().stream()
+		                    .map(activityDTO -> {
+		                        ScheduleDetail scheduleDetail = new ScheduleDetail();
+		                        scheduleDetail.setContext(activityDTO.getContext());
+		                        scheduleDetail.setSchedule(newSchedule);
+		                        return scheduleDetail;
+		                    }).collect(Collectors.toList());
+
+		            newSchedule.setActivities(scheduleDetails);
+		            existingTour.getSchedules().add(newSchedule);
+		        }
+		    }
 
 		// CHECK schedule
-		for (Schedule existingSchedule : existingTour.getSchedules()) {
-			boolean existingUpdate = false;
-			for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
-				if (scheduleDTO.getActivity().equals(existingSchedule.getActivity())) {
-					existingUpdate = true;
-					break;
-				}
-			}
-			if (!existingUpdate) {
-				scheduleRepository.delete(existingSchedule);
-				scheduleRemove.add(existingSchedule);
-			}
-		}
-		existingTour.getSchedules().removeAll(scheduleRemove);
-
-		for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
-			boolean exist = false;
-			for (Schedule existingSchedule : existingTour.getSchedules()) {
-				if (scheduleDTO.getActivity().equals(existingSchedule.getActivity())) {
-					exist = true;
-					break;
-				}
-			}
-
-			if (!exist) {
-				Schedule newShedule = new Schedule();
-				newShedule.setTour(existingTour);
-				newShedule.setActivity(scheduleDTO.getActivity());
-				newShedule.setDate(scheduleDTO.getDate());
-				existingTour.getSchedules().add(newShedule);
-			}
-		}
+//		for (Schedule existingSchedule : existingTour.getSchedules()) {
+//			boolean existingUpdate = false;
+//			for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
+//				if (scheduleDTO.getActivities().equals(existingSchedule.getActivities())) {
+//					existingUpdate = true;
+//					break;
+//				}
+//			}
+//			if (!existingUpdate) {
+//				scheduleRepository.delete(existingSchedule);
+//				scheduleRemove.add(existingSchedule);
+//			}
+//		}
+//		existingTour.getSchedules().removeAll(scheduleRemove);
+//
+//		for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
+//			boolean exist = false;
+//			for (Schedule existingSchedule : existingTour.getSchedules()) {
+//				if (scheduleDTO.getActivities().equals(existingSchedule.getActivities())) {
+//					exist = true;
+//					break;
+//				}
+//			}
+//
+//			if (!exist) {
+//				Schedule newShedule = new Schedule();
+//				newShedule.setTour(existingTour);
+//				
+//				List<ScheduleDetailDTO> scheduleDetailDTOs = scheduleDTO.getActivities();
+//				List<ScheduleDetail> scheduleDetails = new ArrayList<>();
+//				
+//				for (ScheduleDetailDTO sc : scheduleDetailDTOs) {
+//					ScheduleDetail scheduleDetail = new ScheduleDetail();
+//					scheduleDetail.setContext(sc.getContext());
+//					scheduleDetails.add(scheduleDetail);
+//				}
+//				
+//				newShedule.setActivities(scheduleDetails);
+//				newShedule.setDate(scheduleDTO.getDate());
+//				existingTour.getSchedules().add(newShedule);
+//			}
+//		}
 
 		// Check category
 		for (TourCategory existingCategory : existingTour.getTourCategories()) {

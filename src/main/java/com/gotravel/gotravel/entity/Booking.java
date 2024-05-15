@@ -1,6 +1,7 @@
 package com.gotravel.gotravel.entity;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -39,5 +40,11 @@ public class Booking {
 	
 	@Column(name = "status")
 	private boolean status;
+	
+	@Column(name = "num_guest")
+	private int numGuest;
+	
+	@Column(name = "create_at")
+	private LocalDateTime createAt;
 
 }

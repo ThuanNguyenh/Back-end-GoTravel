@@ -33,6 +33,7 @@ public class SecurityConfig {
 		// nếu như đăng nhập với role USER thì sẽ truy cập đến api demo
 		.requestMatchers("/demo/**").hasAnyAuthority("ROLE_USER")
 		.requestMatchers("/api/v1/tour/**").hasAnyAuthority("ROLE_HOST")
+		.requestMatchers("/api/v1/directory/**").permitAll()
 		.and()
 		.csrf().disable()
 		.authorizeRequests()

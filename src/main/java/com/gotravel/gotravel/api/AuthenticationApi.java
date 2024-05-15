@@ -129,7 +129,7 @@ public class AuthenticationApi {
 
 	}
 	
-	// VALIDATION INPUT
+		// VALIDATION INPUT
 		@ResponseStatus(HttpStatus.BAD_REQUEST)
 		@ExceptionHandler(BindException.class)
 		public String handleBindException(BindException e) {

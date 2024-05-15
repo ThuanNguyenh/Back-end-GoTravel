@@ -1,9 +1,8 @@
 package com.gotravel.gotravel.entity;
 
-import java.util.List;
 import java.util.UUID;
 
-
+import jakarta.annotation.Generated;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,34 +11,25 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "schedule")
-public class Schedule {
+public class ScheduleDetail {
 	
 	@Id
+	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "schedule_id")
-	private UUID scheduleId;
+	private UUID id;
 	
-//	@Column(name = "activity", columnDefinition = "NTEXT")
-//	private String activity;
-	
-	@Column(name = "date")
-	private int date;
+	@Column(name = "context", columnDefinition = "NTEXT")
+	private String context;
 	
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private Tour tour;
-	
-	@OneToMany(mappedBy = "schedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ScheduleDetail> activities;
-	
+	private Schedule schedule;
+
 }
