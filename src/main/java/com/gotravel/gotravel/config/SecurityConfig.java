@@ -30,10 +30,12 @@ public class SecurityConfig {
 		http.authorizeRequests()
 		.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 		.requestMatchers("/api/v1/auth/**").permitAll()
+		.requestMatchers("/api/v1/booking/**").permitAll()
 		// nếu như đăng nhập với role USER thì sẽ truy cập đến api demo
 		.requestMatchers("/demo/**").hasAnyAuthority("ROLE_USER")
 		.requestMatchers("/api/v1/tour/**").hasAnyAuthority("ROLE_HOST")
 		.requestMatchers("/api/v1/directory/**").permitAll()
+		.requestMatchers("/api/paypal/**").permitAll()
 		.and()
 		.csrf().disable()
 		.authorizeRequests()

@@ -76,9 +76,6 @@ public class TourService implements ITourService {
 
 	@Autowired
 	private TourRuleReposiitory tourRuleReposiitory;
-	
-	@Autowired
-	private ScheduleConverter scheduleConverter;
 
 	@Override
 	public List<TourDTO> findAll() {
@@ -93,6 +90,16 @@ public class TourService implements ITourService {
 		}
 
 		return tourDTOs;
+	}
+
+	// lấy ra danh sách tất cả các tour của userId
+	@Override
+	public List<TourDTO> getAllTourOfUser(UUID userId) {
+
+		List<Tour> tours = tourRepository.findAllTourByUserId(userId);
+
+		return tours.stream().map(tourConverter::toDTO).collect(Collectors.toList());
+
 	}
 
 	@Override
@@ -126,7 +133,7 @@ public class TourService implements ITourService {
 			Schedule schedule = new Schedule();
 			schedule.setDate(s.getDate());
 			schedule.setTour(tour);
-			
+
 			List<ScheduleDetail> activities = new ArrayList<>();
 			for (ScheduleDetailDTO ac : s.getActivities()) {
 				ScheduleDetail activity = new ScheduleDetail();
@@ -268,93 +275,48 @@ public class TourService implements ITourService {
 				existingTour.getImages().add(newImage);
 			}
 		}
-		
+
 		// check update
-		
-		 for (Schedule existingSchedule : existingTour.getSchedules()) {
-		        boolean existsInUpdate = updateTourDTO.getSchedules().stream()
-		                .anyMatch(scheduleDTO -> scheduleDTO.getDate() == existingSchedule.getDate()
-		                        && scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
-		                        && scheduleDTO.getActivities().stream()
-		                        .allMatch(activityDTO -> existingSchedule.getActivities().stream()
-		                                .anyMatch(activity -> activity.getContext().equals(activityDTO.getContext()))));
 
-		        if (!existsInUpdate) {
-		            scheduleRepository.delete(existingSchedule);
-		            schedulesToRemove.add(existingSchedule);
-		        }
-		    }
-		    existingTour.getSchedules().removeAll(schedulesToRemove);
+		for (Schedule existingSchedule : existingTour.getSchedules()) {
+			boolean existsInUpdate = updateTourDTO.getSchedules().stream()
+					.anyMatch(scheduleDTO -> scheduleDTO.getDate() == existingSchedule.getDate()
+							&& scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
+							&& scheduleDTO.getActivities().stream()
+									.allMatch(activityDTO -> existingSchedule.getActivities().stream().anyMatch(
+											activity -> activity.getContext().equals(activityDTO.getContext()))));
 
-		    for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
-		        boolean exist = existingTour.getSchedules().stream()
-		                .anyMatch(existingSchedule -> scheduleDTO.getDate() == existingSchedule.getDate()
-		                        && scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
-		                        && scheduleDTO.getActivities().stream()
-		                        .allMatch(activityDTO -> existingSchedule.getActivities().stream()
-		                                .anyMatch(activity -> activity.getContext().equals(activityDTO.getContext()))));
+			if (!existsInUpdate) {
+				scheduleRepository.delete(existingSchedule);
+				schedulesToRemove.add(existingSchedule);
+			}
+		}
+		existingTour.getSchedules().removeAll(schedulesToRemove);
 
-		        if (!exist) {
-		            Schedule newSchedule = new Schedule();
-		            newSchedule.setTour(existingTour);
-		            newSchedule.setDate(scheduleDTO.getDate());
+		for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
+			boolean exist = existingTour.getSchedules().stream()
+					.anyMatch(existingSchedule -> scheduleDTO.getDate() == existingSchedule.getDate()
+							&& scheduleDTO.getActivities().size() == existingSchedule.getActivities().size()
+							&& scheduleDTO.getActivities().stream()
+									.allMatch(activityDTO -> existingSchedule.getActivities().stream().anyMatch(
+											activity -> activity.getContext().equals(activityDTO.getContext()))));
 
-		            List<ScheduleDetail> scheduleDetails = scheduleDTO.getActivities().stream()
-		                    .map(activityDTO -> {
-		                        ScheduleDetail scheduleDetail = new ScheduleDetail();
-		                        scheduleDetail.setContext(activityDTO.getContext());
-		                        scheduleDetail.setSchedule(newSchedule);
-		                        return scheduleDetail;
-		                    }).collect(Collectors.toList());
+			if (!exist) {
+				Schedule newSchedule = new Schedule();
+				newSchedule.setTour(existingTour);
+				newSchedule.setDate(scheduleDTO.getDate());
 
-		            newSchedule.setActivities(scheduleDetails);
-		            existingTour.getSchedules().add(newSchedule);
-		        }
-		    }
+				List<ScheduleDetail> scheduleDetails = scheduleDTO.getActivities().stream().map(activityDTO -> {
+					ScheduleDetail scheduleDetail = new ScheduleDetail();
+					scheduleDetail.setContext(activityDTO.getContext());
+					scheduleDetail.setSchedule(newSchedule);
+					return scheduleDetail;
+				}).collect(Collectors.toList());
 
-		// CHECK schedule
-//		for (Schedule existingSchedule : existingTour.getSchedules()) {
-//			boolean existingUpdate = false;
-//			for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
-//				if (scheduleDTO.getActivities().equals(existingSchedule.getActivities())) {
-//					existingUpdate = true;
-//					break;
-//				}
-//			}
-//			if (!existingUpdate) {
-//				scheduleRepository.delete(existingSchedule);
-//				scheduleRemove.add(existingSchedule);
-//			}
-//		}
-//		existingTour.getSchedules().removeAll(scheduleRemove);
-//
-//		for (ScheduleDTO scheduleDTO : updateTourDTO.getSchedules()) {
-//			boolean exist = false;
-//			for (Schedule existingSchedule : existingTour.getSchedules()) {
-//				if (scheduleDTO.getActivities().equals(existingSchedule.getActivities())) {
-//					exist = true;
-//					break;
-//				}
-//			}
-//
-//			if (!exist) {
-//				Schedule newShedule = new Schedule();
-//				newShedule.setTour(existingTour);
-//				
-//				List<ScheduleDetailDTO> scheduleDetailDTOs = scheduleDTO.getActivities();
-//				List<ScheduleDetail> scheduleDetails = new ArrayList<>();
-//				
-//				for (ScheduleDetailDTO sc : scheduleDetailDTOs) {
-//					ScheduleDetail scheduleDetail = new ScheduleDetail();
-//					scheduleDetail.setContext(sc.getContext());
-//					scheduleDetails.add(scheduleDetail);
-//				}
-//				
-//				newShedule.setActivities(scheduleDetails);
-//				newShedule.setDate(scheduleDTO.getDate());
-//				existingTour.getSchedules().add(newShedule);
-//			}
-//		}
+				newSchedule.setActivities(scheduleDetails);
+				existingTour.getSchedules().add(newSchedule);
+			}
+		}
 
 		// Check category
 		for (TourCategory existingCategory : existingTour.getTourCategories()) {

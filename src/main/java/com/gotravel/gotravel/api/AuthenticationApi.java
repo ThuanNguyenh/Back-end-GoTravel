@@ -67,7 +67,6 @@ public class AuthenticationApi {
 			}
 
 			// trường hợp đúng
-
 			AuthenticationResponse response = authService.register(registerRequest);
 			Map<String, Object> responsebody = new HashMap<>();
 			responsebody.put("message", "Đăng ký thành công");

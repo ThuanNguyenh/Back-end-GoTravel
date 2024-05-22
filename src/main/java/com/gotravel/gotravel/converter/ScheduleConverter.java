@@ -30,7 +30,7 @@ public class ScheduleConverter {
 		}
 		scheduleDTO.setActivities(details);
 
-		if (!schedule.getTour().isNull()) {
+		if (schedule.getTour() != null) {
 			scheduleDTO.setTourId(schedule.getTour().getTourId());
 		}
 

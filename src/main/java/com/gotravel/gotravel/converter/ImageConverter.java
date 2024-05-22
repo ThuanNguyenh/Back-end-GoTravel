@@ -16,7 +16,7 @@ public class ImageConverter {
 		imageDTO.setImageId(image.getImageId());
 		imageDTO.setUrl(image.getUrl());
 		
-		if (!image.getTour().isNull()) {
+		if (image.getTour() != null) {
 			imageDTO.setTourId(image.getTour().getTourId());
 		}
 		

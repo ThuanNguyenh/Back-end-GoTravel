@@ -55,8 +55,8 @@ public class Tour {
 	@Column(name = "price")
 	private Float price;
 
-	@Column(name = "is_null")
-	private boolean isNull;
+	@Column(name = "status")
+	private boolean status = false;
 
 	@Column(name = "num_guest")
 	private int numguest;
