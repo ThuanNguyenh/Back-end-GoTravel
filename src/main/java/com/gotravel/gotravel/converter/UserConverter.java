@@ -56,7 +56,8 @@ public class UserConverter {
 		user.setDistrict(userDTO.getDistrict());
 		user.setWard(userDTO.getWard());
 		user.setAvatar(userDTO.getAvatar());
-
+		user.setPassword(userDTO.getPassword());
+		
 		return user;
 
 	}

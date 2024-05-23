@@ -79,7 +79,6 @@ public class TourApi {
 
 		Optional<Tour> tourOp = tourRepository.findById(tourId);
 		return tourOp.map(tour -> {
-//			updateTourDTO.setTourId(tour.getTourId());
 			tourService.update(tourId, updateTourDTO);
 			return new ResponseEntity<>("Cập nhật thành công!", HttpStatus.OK);
 		}).orElseGet(() -> new ResponseEntity<>("Tour không tồn tại!", HttpStatus.NOT_FOUND));

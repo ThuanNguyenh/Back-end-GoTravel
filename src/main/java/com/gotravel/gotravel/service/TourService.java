@@ -206,7 +206,6 @@ public class TourService implements ITourService {
 			Tour existingTour = tourOp.get();
 			Tour tourUpdate = tourConverter.toEntity(updateTourDTO);
 
-//			existingTour.setTourId(existingTour.getTourId());
 			existingTour.setTourName(tourUpdate.getTourName());
 			existingTour.setDescription(tourUpdate.getDescription());
 			existingTour.setThumbnail(tourUpdate.getThumbnail());
@@ -449,9 +448,8 @@ public class TourService implements ITourService {
 		}
 
 	}
-
 	// end check update
-
+	
 	@Override
 	public void remove(UUID id) {
 

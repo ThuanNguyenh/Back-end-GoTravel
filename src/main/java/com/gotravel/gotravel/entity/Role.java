@@ -54,7 +54,7 @@ public class Role {
 		this.name = name;
 	}
 
-	@ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+	@ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@Fetch(value = FetchMode.SELECT)
 	@JsonIgnore
 	
