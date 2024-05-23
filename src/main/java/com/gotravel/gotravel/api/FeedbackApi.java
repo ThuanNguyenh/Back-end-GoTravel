@@ -24,6 +24,18 @@ public class FeedbackApi {
 
 	@Autowired
 	private IFeedbackService feedbackService;
+	
+	@GetMapping("/all")
+	public ResponseEntity<?> getAll(FeedbackDTO feedbackDTO) {
+		List<FeedbackDTO> allFeedback = feedbackService.findAll();
+		
+		if (!allFeedback.isEmpty()) {
+			return new ResponseEntity<>(allFeedback, HttpStatus.OK);
+		}  else {
+			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
+		}
+		
+	}
 
 	@PostMapping("/create")
 	private ResponseEntity<?> createFeedback(@RequestBody FeedbackDTO feedbackDTO) {
