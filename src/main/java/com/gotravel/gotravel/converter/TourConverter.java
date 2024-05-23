@@ -6,16 +6,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.gotravel.gotravel.dto.CategoryDTO;
+import com.gotravel.gotravel.dto.FeedbackDTO;
 import com.gotravel.gotravel.dto.ImageDTO;
 import com.gotravel.gotravel.dto.RuleDTO;
 import com.gotravel.gotravel.dto.ScheduleDTO;
 import com.gotravel.gotravel.dto.TourDTO;
 import com.gotravel.gotravel.dto.UtilitiesDTO;
+import com.gotravel.gotravel.entity.Feedback;
 import com.gotravel.gotravel.entity.Image;
 import com.gotravel.gotravel.entity.Schedule;
 import com.gotravel.gotravel.entity.Tour;
@@ -48,9 +52,12 @@ public class TourConverter {
 
 	@Autowired
 	private ScheduleConverter scheduleConverter;
-	
+
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private FeedbackConverter feedbackConverter;
 
 	public TourDTO toDTO(Tour tour) {
 
@@ -69,6 +76,12 @@ public class TourConverter {
 		tourDTO.setStartDate(tour.getStartDate());
 		tourDTO.setEndDate(tour.getEndDate());
 		tourDTO.setCreateAt(tour.getCreate_at());
+
+		// thu thập các đánh giá
+		List<Float> allRatings = tour.getFeedbacks().stream()
+				.map(Feedback::getRating)
+				.collect(Collectors.toList());
+		tourDTO.setRatings(allRatings);
 
 		// IMAGES
 		List<ImageDTO> imageList = new ArrayList<>();
@@ -113,7 +126,7 @@ public class TourConverter {
 			}
 		}
 		tourDTO.setRules(rules);
-		
+
 		// USER
 		if (tour.getUser() != null) {
 			tourDTO.setOwner(userConverter.toDTO(tour.getUser()));
@@ -144,10 +157,9 @@ public class TourConverter {
 		tour.setDiscount(tourDTO.getDiscount());
 		tour.setStartDate(tourDTO.getStartDate());
 		tour.setEndDate(tourDTO.getEndDate());
-		
+
 		Optional<User> optionalUser = userRepository.findById(tourDTO.getOwner().getUserId());
-		
-		
+
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			tour.setUser(user);

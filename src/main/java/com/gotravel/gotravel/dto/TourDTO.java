@@ -68,4 +68,6 @@ public class TourDTO {
 	private List<RuleDTO> rules;
 
 	private List<ScheduleDTO> schedules;
+	
+	private List<Float> ratings;
 }

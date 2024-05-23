@@ -27,32 +27,23 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf().disable();
 		http.sessionManagement().sessionCreationPolicy(STATELESS);
-		http.authorizeRequests()
-		.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-		.requestMatchers("/api/v1/user/**").permitAll()
-		.requestMatchers("/api/v1/auth/**").permitAll()
-		.requestMatchers("/api/v1/booking/**").permitAll()
-		// nếu như đăng nhập với role USER thì sẽ truy cập đến api demo
-		.requestMatchers("/demo/**").hasAnyAuthority("ROLE_USER")
-		.requestMatchers("/api/v1/tour/**").hasAnyAuthority("ROLE_HOST")
-		.requestMatchers("/api/v1/directory/**").permitAll()
-		.requestMatchers("/api/paypal/**").permitAll()
-		.requestMatchers("/api/v1/feedback/**").permitAll()
-		.and()
-		.csrf().disable()
-		.authorizeRequests()
-		.anyRequest()
-		.authenticated()
-		.and()
-		.exceptionHandling().accessDeniedHandler(accessDeniedHandler())
-		.and()
-		.authenticationProvider(authenticationProvider)
-		.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+		http.authorizeRequests().requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+				.requestMatchers("/api/v1/user/**").permitAll().requestMatchers("/api/v1/auth/**").permitAll()
+				.requestMatchers("/api/v1/booking/**").permitAll()
+				// nếu như đăng nhập với role USER thì sẽ truy cập đến api demo
+				.requestMatchers("/demo/**").hasAnyAuthority("ROLE_USER")
+				.requestMatchers(HttpMethod.GET, "/api/v1/tour/**").permitAll() // Cho phép truy cập chi tiết tour
+				.requestMatchers("/api/v1/tour/**").hasAuthority("ROLE_HOST")
+				.requestMatchers("/api/v1/directory/**")
+				.permitAll().requestMatchers("/api/paypal/**").permitAll().requestMatchers("/api/v1/feedback/**")
+				.permitAll().and().csrf().disable().authorizeRequests().anyRequest().authenticated().and()
+				.exceptionHandling().accessDeniedHandler(accessDeniedHandler()).and()
+				.authenticationProvider(authenticationProvider)
+				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-		
-	return http.build();
+		return http.build();
 	}
-	
+
 	@Bean
 	public AccessDeniedHandler accessDeniedHandler() {
 		return new CustomAccessDeniedHandler();
