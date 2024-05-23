@@ -99,5 +99,8 @@ public class Tour {
 
 	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<Like> likes;
+	
+	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<Feedback> feedbacks;
 
 }

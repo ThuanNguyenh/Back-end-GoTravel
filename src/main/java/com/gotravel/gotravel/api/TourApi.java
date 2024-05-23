@@ -64,7 +64,6 @@ public class TourApi {
 	@PostMapping("/add")
 	public ResponseEntity<?> addTour(@Valid @RequestBody TourDTO tourDTO) {
 		TourDTO tourSave = tourService.save(tourDTO);
-		System.out.println("du lieu nhap vao: " + tourDTO);
 		if (tourSave != null) {
 			return new ResponseEntity<>(tourSave, HttpStatus.OK);
 		} else {

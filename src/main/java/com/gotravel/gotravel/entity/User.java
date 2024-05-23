@@ -50,6 +50,10 @@ public class User implements UserDetails {
 
 	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<Like> likes;
+	
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<Feedback> feedbacks;
+	
 
 	@Column(name = "user_name", columnDefinition = "NTEXT")
 	private String userName;

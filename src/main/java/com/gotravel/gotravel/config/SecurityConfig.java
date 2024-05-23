@@ -37,6 +37,7 @@ public class SecurityConfig {
 		.requestMatchers("/api/v1/tour/**").hasAnyAuthority("ROLE_HOST")
 		.requestMatchers("/api/v1/directory/**").permitAll()
 		.requestMatchers("/api/paypal/**").permitAll()
+		.requestMatchers("/api/v1/feedback/**").permitAll()
 		.and()
 		.csrf().disable()
 		.authorizeRequests()
