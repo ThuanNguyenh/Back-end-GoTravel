@@ -1,5 +1,6 @@
 package com.gotravel.gotravel.api;
 
+import com.gotravel.gotravel.service.BookingService;
 import com.gotravel.gotravel.service.PaypalService;
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
@@ -17,11 +18,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/paypal")
+@RequestMapping("/api/v1/gotravel/paypal")
 public class PaypalApi {
 
     @Autowired
     private PaypalService paypalService;
+    
+    @Autowired
+    private BookingService bookingService;
 
     @PostMapping("/pay")
     public ResponseEntity<?> pay(@RequestParam("sum") double sum) {

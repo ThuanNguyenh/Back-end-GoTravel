@@ -2,11 +2,13 @@ package com.gotravel.gotravel.entity;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gotravel.gotravel.enums.ConfirmationBooking;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -42,15 +45,21 @@ public class Booking {
 	private Date checkOut;
 	
 	@Column(name = "total_price")
-	private Float totalPrice;
+	private Double totalPrice;
 	
 	@Enumerated(EnumType.STRING)
-	private ConfirmationBooking status;
+	private ConfirmationBooking confirmation = ConfirmationBooking.RESERVE;
+	
+	@Column(name = "status")
+	private Boolean status;
 	
 	@Column(name = "num_guest")
 	private int numGuest;
 	
 	@Column(name = "create_at")
 	private LocalDateTime createAt;
+	
+	@OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<PaymentBill> paymentBills;
 
 }

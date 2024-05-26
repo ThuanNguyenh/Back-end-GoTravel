@@ -157,6 +157,7 @@ public class TourConverter {
 		tour.setDiscount(tourDTO.getDiscount());
 		tour.setStartDate(tourDTO.getStartDate());
 		tour.setEndDate(tourDTO.getEndDate());
+		tour.setFeedbacks(new ArrayList<>());
 
 		Optional<User> optionalUser = userRepository.findById(tourDTO.getOwner().getUserId());
 

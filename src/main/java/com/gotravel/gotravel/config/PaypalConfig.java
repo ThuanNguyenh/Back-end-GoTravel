@@ -1,24 +1,25 @@
 package com.gotravel.gotravel.config;
 
-import com.paypal.base.rest.APIContext;
-import com.paypal.base.rest.OAuthTokenCredential;
-import com.paypal.base.rest.PayPalRESTException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.paypal.base.rest.APIContext;
+import com.paypal.base.rest.OAuthTokenCredential;
+import com.paypal.base.rest.PayPalRESTException;
 
 @Configuration
 public class PaypalConfig {
 
 	@Value("${paypal.client.id}")
 	private String clientId;
-
+	
 	@Value("${paypal.client.secret}")
 	private String clientSecret;
-
+	
 	@Value("${paypal.mode}")
 	private String mode;
 
@@ -36,8 +37,15 @@ public class PaypalConfig {
 
 	@Bean
 	public APIContext apiContext() throws PayPalRESTException {
-		APIContext context = new APIContext(oAuthTokenCredential().getAccessToken());
+		String accessToken = oAuthTokenCredential().getAccessToken();
+		if (accessToken == null) {
+            // Xử lý khi không thể nhận được AccessToken từ PayPal
+			System.out.println("KHONG THE NHAN TOKEN");
+            throw new RuntimeException("Cannot get access token from PayPal");
+        }
+		APIContext context = new APIContext(accessToken);
 		context.setConfigurationMap(paypalSdkConfig());
 		return context;
 	}
+
 }

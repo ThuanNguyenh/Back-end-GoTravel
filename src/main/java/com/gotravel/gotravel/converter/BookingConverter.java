@@ -17,10 +17,10 @@ public class BookingConverter {
 
 	@Autowired
 	private TourConverter tourConverter;
-	
+
 	@Autowired
 	private TourRepository tourRepository;
-	
+
 	@Autowired
 	private UserRepository userRepository;
 
@@ -30,17 +30,33 @@ public class BookingConverter {
 
 		bookingDTO.setBookingId(booking.getBookingId());
 		bookingDTO.setNumGuest(booking.getNumGuest());
-		bookingDTO.setTotalPrice(booking.getTotalPrice());
-		bookingDTO.setUser(userConverter.toDTO(booking.getUser()));
-		bookingDTO.setTour(tourConverter.toDTO(booking.getTour()));
-		
-		if (booking.getStatus() != null) {
-			bookingDTO.setStatus(booking.getStatus().name());
+		bookingDTO.setTotal(booking.getTotalPrice());
+
+		if (booking.getUser() != null) {
+			bookingDTO.setUserId(booking.getUser().getId());
+			bookingDTO.setUser(userConverter.toDTO(booking.getUser()));
 		} else {
-			bookingDTO.setStatus(null);
+			bookingDTO.setUserId(null);
+			bookingDTO.setUser(null);
 		}
-		
-		
+
+		if (booking.getTour() != null) {
+			bookingDTO.setTourId(booking.getTour().getTourId());
+			bookingDTO.setTour(tourConverter.toDTO(booking.getTour()));
+
+		} else {
+			bookingDTO.setTourId(null);
+			bookingDTO.setTour(null);
+		}
+
+		bookingDTO.setStatus(booking.getStatus());
+
+		if (booking.getConfirmation() != null) {
+			bookingDTO.setConfirmation(booking.getConfirmation().name());
+		} else {
+			bookingDTO.setConfirmation(null);
+		}
+
 		bookingDTO.setCheckInDate(booking.getCheckIn());
 		bookingDTO.setCheckOutDate(booking.getCheckOut());
 
@@ -53,14 +69,26 @@ public class BookingConverter {
 		Booking booking = new Booking();
 
 		booking.setBookingId(bookingDTO.getBookingId());
-		booking.setTotalPrice(bookingDTO.getTotalPrice());
+		booking.setTotalPrice(bookingDTO.getTotal());
 		booking.setCheckIn(bookingDTO.getCheckInDate());
 		booking.setCheckOut(bookingDTO.getCheckOutDate());
-		
-		booking.setUser(userRepository.findById(bookingDTO.getUser().getUserId()).get());
+		booking.setStatus(bookingDTO.getStatus());
+//		booking.setConfirmation(ConfirmationBooking.valueOf(bookingDTO.getConfirmation()));
 
-		booking.setTour(tourRepository.findById(bookingDTO.getTour().getTourId()).get());
-		
+		if (bookingDTO.getUser() != null) {
+			booking.setUser(userRepository.findById(bookingDTO.getUser().getUserId()).get());
+
+		} else {
+			booking.setUser(null);
+		}
+
+		if (bookingDTO.getTour() != null) {
+			booking.setTour(tourRepository.findById(bookingDTO.getTour().getTourId()).get());
+
+		} else {
+			booking.setTour(null);
+		}
+
 		return booking;
 
 	}

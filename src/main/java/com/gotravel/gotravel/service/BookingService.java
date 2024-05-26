@@ -46,32 +46,46 @@ public class BookingService implements IBookingService {
 
 		return bookingDTOs;
 	}
+	
+	@Override
+	public void removeAllBooking() { 
+		bookingResponsitory.deleteAll();
+	}
 
 	@Override
 	public BookingDTO findById(UUID id) {
-		// TODO Auto-generated method stub
-		return null;
+		Booking booking;
+		booking = bookingResponsitory.findById(id).get();
+		return bookingConverter.toDTO(booking);
+	}
+	
+	// create booking
+	public BookingDTO createBooking(Booking booking) {
+		booking = bookingResponsitory.save(booking);
+		System.out.println("booking added");
+		return bookingConverter.toDTO(booking);
 	}
 
 	@Override
 	public BookingDTO save(BookingDTO bookingDTO) {
 
-		Booking booking = new Booking();
-		booking = bookingConverter.toEntity(bookingDTO);
-
-		booking.setCheckIn(bookingDTO.getCheckInDate());
-		booking.setCheckOut(bookingDTO.getCheckOutDate());
-		booking.setNumGuest(bookingDTO.getNumGuest());
-		booking.setTotalPrice(bookingDTO.getTotalPrice());
-
-		booking.setStatus(ConfirmationBooking.PENDING);
+		Booking newBooking = new Booking();
+		
+		newBooking = bookingConverter.toEntity(bookingDTO);
+		
+		newBooking.setCheckIn(bookingDTO.getCheckInDate());
+		newBooking.setCheckOut(bookingDTO.getCheckOutDate());
+		newBooking.setNumGuest(bookingDTO.getNumGuest());
+		newBooking.setTotalPrice(bookingDTO.getTotal());
+		newBooking.setStatus(false);
+		newBooking.setConfirmation(ConfirmationBooking.RESERVE);
 
 		LocalDateTime today = LocalDateTime.now();
-		booking.setCreateAt(today);
+		newBooking.setCreateAt(today);
+		
+		bookingResponsitory.save(newBooking);
 
-		bookingResponsitory.save(booking);
-
-		return bookingConverter.toDTO(booking);
+		return bookingConverter.toDTO(newBooking);
 	}
 
 	@Override
@@ -80,9 +94,9 @@ public class BookingService implements IBookingService {
 		return null;
 	}
 
-	// update booking status
+	// update booking confirmation
 	@Override
-	public void updateBookingStatus(UUID bookingId, String status) {
+	public void updateBookingConfirm(UUID bookingId, String status) {
 		Optional<Booking> bookingOp = bookingResponsitory.findById(bookingId);
 
 		if (bookingOp.isEmpty()) {
@@ -94,13 +108,32 @@ public class BookingService implements IBookingService {
 			// chuyển đổi chuỗi status thành 1 hằng số của enum của lớp ConfirmationBooking
 			ConfirmationBooking confirmation = Enum.valueOf(ConfirmationBooking.class, status);
 			// kiểm tra nếu như status hiện tại không giống với confirmation thì set lại trạng thái booking
-			if (!booking.getStatus().equals(confirmation)) {
-				booking.setStatus(confirmation);
+			if (!booking.getConfirmation().equals(confirmation)) {
+				booking.setConfirmation(confirmation);
 				bookingResponsitory.save(booking);
 			}
 		} catch (IllegalArgumentException e) {
 			// Xử lý giá trị trạng thái không hợp lệ (ví dụ, ném ra một ngoại lệ, ghi log lỗi, v.v.)
 		    throw new IllegalArgumentException("Giá trị trạng thái không hợp lệ: " + status);
+		}
+
+	}
+	
+	// update booking status
+	@Override
+	public void updateBookingStatus(UUID bookingId, boolean status) {
+		Optional<Booking> bookingOptional = bookingResponsitory.findById(bookingId);
+		
+		if (!bookingOptional.isPresent()) {
+			throw new RuntimeException("Booking with ID " + bookingId + "not found.");
+		}
+		
+		Booking booking = bookingOptional.get();
+		
+		if (booking.getStatus() != status) {
+			booking.setStatus(status);
+			booking.setConfirmation(ConfirmationBooking.valueOf(ConfirmationBooking.PENDING.name()));
+			bookingResponsitory.save(booking);
 		}
 
 	}

@@ -1,6 +1,7 @@
 package com.gotravel.gotravel.dto;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.gotravel.gotravel.enums.ConfirmationBooking;
@@ -13,14 +14,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingDTO {
-
-	private UUID bookingId;
-	private int numGuest;
-	private Float totalPrice;
+	
+	// to convert with entity
 	private UserDTO user;
 	private TourDTO tour;
 	private Date checkInDate;
+	private String confirmation;
+	private UUID userId;
+	private UUID tourId;
+	private UUID bookingId;
+	private int numGuest;
+	private Double total;
+	private Boolean status;
 	private Date checkOutDate;
-	private String status;
+	private Date dateBooking;
+	private Double price;
+	private String currency;
+	private String method;
+	private String intent;
+	private String description;
+	private LocalDateTime createAt;
+	
 
 }

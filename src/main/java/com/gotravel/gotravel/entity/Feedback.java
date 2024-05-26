@@ -22,7 +22,7 @@ public class Feedback {
 	@Column(name = "feedback_id")
 	private UUID feedBackId;
 	
-	@Column(name = "comment")
+	@Column(name = "comment", columnDefinition = "ntext")
 	private String comment;
 	
 	@Column(name = "rating")
