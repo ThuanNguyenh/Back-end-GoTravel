@@ -1,9 +1,7 @@
 package com.gotravel.gotravel.entity;
 
-import java.sql.Date;
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
@@ -16,10 +14,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Data
+@Getter
+@Setter
+@AllArgsConstructor
 @Table(name = "tour")
 public class Tour {
 
@@ -27,6 +31,10 @@ public class Tour {
 	@Column(name = "tour_id")
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private UUID tourId;
+	
+	public UUID getTourId() {
+        return tourId;
+    }
 
 	@ManyToOne
 	private User user;
@@ -52,8 +60,11 @@ public class Tour {
 	@Column(name = "detail_address", columnDefinition = "NTEXT")
 	private String detailAddress;
 
-	@Column(name = "price")
-	private Float price;
+	@Column(name = "price_adult")
+	private Float priceAdult;
+	
+	@Column(name = "price_children")
+	private Float priceChildren;
 
 	@Column(name = "status")
 	private boolean status = false;
@@ -64,26 +75,22 @@ public class Tour {
 	@Column(name = "discount")
 	private int discount;
 
-	@Column(name = "start_date")
-	private Date startDate;
-
-	@Column(name = "end_date")
-	private Date endDate;
-
 	@Column(name = "tour_time")
 	private int tourTime;
 
 	@Column(name = "create_at")
-	private Date create_at;
+	private LocalDateTime create_at;
 
 	public Tour() {
 		this.discount = 0;
-		this.price = 0.0f;
+		this.priceAdult = 0.0f;
+		this.priceChildren = 0.0f;
 		this.numguest = 0;
 		this.tourTime = 0;
 	}
 
-	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL) private List<TourUtilities> tourUtilities;
+	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<TourUtilities> tourUtilities;
 
 	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<TourCategory> tourCategories;
@@ -99,10 +106,10 @@ public class Tour {
 
 	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<Like> likes;
-	
+
 	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<Feedback> feedbacks;
-	
+
 	@OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<Booking> bookings;
 

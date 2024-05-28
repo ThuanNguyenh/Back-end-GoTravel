@@ -7,7 +7,7 @@ public enum ConfirmationBooking {
 	REJECTED, // Đã từ chối
 	COMPLETED, // Đã hoàn thành.
 	IN_PROGRESS, // Đang diễn ra
-	CANCEL, // tu choi
+	CANCEL, // hủy
 	RESERVE // giữ chỗ
 
 }

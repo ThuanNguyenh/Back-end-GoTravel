@@ -1,5 +1,6 @@
 package com.gotravel.gotravel.api;
 
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,17 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gotravel.gotravel.converter.BookingConverter;
 import com.gotravel.gotravel.dto.BookingDTO;
+import com.gotravel.gotravel.dto.BookingTourDateDTO;
 import com.gotravel.gotravel.dto.PaymentDTO;
 import com.gotravel.gotravel.entity.Booking;
+import com.gotravel.gotravel.entity.Tour;
 import com.gotravel.gotravel.repository.BookingResponsitory;
+import com.gotravel.gotravel.repository.TourRepository;
 import com.gotravel.gotravel.service.PaypalService;
 import com.gotravel.gotravel.service.impl.IBookingService;
 import com.gotravel.gotravel.service.impl.IPaymentBillService;
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
+
+import io.jsonwebtoken.io.IOException;
 
 @RestController
 @CrossOrigin
@@ -43,21 +49,56 @@ public class BookingApi {
 	public static final String SUCCESS_URL = "/paypal/success";
 	public static final String CANCEL_URL = "/paypal/cancel";
 
-	@Autowired
-	private IBookingService bookingService;
+//	@Autowired
+	private final IBookingService bookingService;
+	
+	 @Autowired
+	    public BookingApi(IBookingService bookingService, BookingResponsitory bookingResponsitory, 
+	                      PaypalService service, IPaymentBillService paymentService, 
+	                      TourRepository tourRepository) {
+	        this.bookingService = bookingService;
+	        this.bookingResponsitory = bookingResponsitory;
+	        this.service = service;
+	        this.paymentService = paymentService;
+	        this.tourRepository = tourRepository;
+	    }
 
 	@Autowired
 	private BookingResponsitory bookingResponsitory;
 
 	@Autowired
-	PaypalService service;
+	private PaypalService service;
 
 	@Autowired
 	PaypalService paypalService;
+	
 	private UUID bookingId;
 
 	@Autowired
-	IPaymentBillService paymentService;
+	private IPaymentBillService paymentService;
+
+	@Autowired
+	private TourRepository tourRepository;
+
+	@Scheduled(cron = "0 */5 * * * *") // 5 phút chạy 1 lần
+	public void scheduleBookingStatusUpdate() throws IOException {
+		System.out.println("ok ok ok");
+		// lấy danh sách các booking cần cập nhật trạng thái
+		try {
+			List<UUID> listUpdate = bookingService.updateBookingStatusWithSchedule();
+			// duyệt qua danh sách và thực hiện việc cập nhật
+			for (UUID id : listUpdate) {
+				System.out.println("UPDATE BOOKING: " + id);
+			}
+		} catch (IOException e) {
+			// Xử lý ngoại lệ IOException nếu có
+			System.err.println("An error occurred while scheduling booking status update: " + e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.err.println("An error occurred: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
 
 	@GetMapping("/all")
 	public ResponseEntity<?> getAllBooking() {
@@ -71,23 +112,100 @@ public class BookingApi {
 
 	}
 
-	@GetMapping("/{userId}&{filter}")
-	private ResponseEntity<?> getAllBookingOfUser(@PathVariable("userId") UUID userId,
-			@PathVariable("filter") String Filter) {
+	// get all booking of user
+	@GetMapping("/my-booking/{userId}")
+	public ResponseEntity<?> getAllMyBookings(@PathVariable("userId") UUID userId) {
+		List<BookingDTO> bookings = bookingService.returnAllMyBookings(userId);
+		if (!bookings.isEmpty()) {
+			return new ResponseEntity<>(bookings, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
+		}
+	}
 
-		List<BookingDTO> bookings = bookingService.returnAllBookingOfHost(userId, Filter);
+	// get all booking of host
+	@GetMapping("/{userId}&{confirmation}")
+	public ResponseEntity<?> getAllBookingOfUser(@PathVariable("userId") UUID userId,
+			@PathVariable("confirmation") String confirmation) {
+		List<BookingDTO> bookings = bookingService.returnAllBookingOfHost(userId, confirmation);
 
 		if (!bookings.isEmpty()) {
 			return new ResponseEntity<>(bookings, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
 		}
+	}
 
+	// get all booking of tour tourId and user userId
+	@GetMapping("/tour-user/{tourId}&{userId}")
+	public ResponseEntity<?> getAllBookingsForTourAndUser(@PathVariable("tourId") UUID tourId,
+			@PathVariable("userId") UUID userId) {
+		List<BookingDTO> bookings = bookingService.findAllBookingsForTourAndUser(tourId, userId);
+		if (!bookings.isEmpty()) {
+			return new ResponseEntity<>(bookings, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Không có dữ liệu.", HttpStatus.NOT_FOUND);
+		}
+	}
+
+	// get all booking of tour with checkIn
+	@GetMapping("/tour/{tourId}/checkin/{checkIn}")
+	public ResponseEntity<?> getBookingsByTourAndCheckIn(@PathVariable UUID tourId, @PathVariable Date checkIn) {
+
+		List<BookingDTO> bookings = bookingService.findAllBookingsByTourAndCheckIn(tourId, checkIn);
+
+		if (!bookings.isEmpty()) {
+			return new ResponseEntity<>(bookings, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Không có dữ liệu.", HttpStatus.NOT_FOUND);
+		}
+
+	}
+
+	// lấy ra danh sách chuyển đổi nhiều booking cùng 1 tour và cùng ngày bắt đầu
+	// thành 1 đối tượng mới
+	@GetMapping("/booking-tour-date/{userId}")
+	public ResponseEntity<?> returnAllBookingOfUserWithTourIdAndCheckIn(@PathVariable UUID userId) {
+
+		// Gọi phương thức service để lấy danh sách BookingTourDateDTO của userId
+		List<BookingTourDateDTO> listBookings = bookingService.returnAllBookingOfUserWithTourIdAndCheckIn(userId);
+
+		// Kiểm tra nếu danh sách không rỗng
+		if (!listBookings.isEmpty()) {
+			// Trả về danh sách bookings cùng với mã trạng thái HTTP 200 (OK)
+			return new ResponseEntity<>(listBookings, HttpStatus.OK);
+		} else {
+			// Nếu danh sách rỗng, trả về thông báo lỗi cùng với mã trạng thái HTTP 404 (Not
+			// Found)
+			return new ResponseEntity<>("Không có dữ liệu.", HttpStatus.NOT_FOUND);
+		}
 	}
 
 	// create booking
 	@PostMapping("/create")
 	public ResponseEntity<?> createBooking(@RequestBody BookingDTO bookingParam) throws JsonProcessingException {
+
+		Map<String, String> message = new HashMap<>();
+
+		// check thời gian đặt với thời gian bắt đầu
+		Date now = new Date(System.currentTimeMillis());
+		Date checkInDate = bookingParam.getCheckInDate();
+
+		if (checkInDate.before(now)) {
+			message.put("message", "Không thể đặt tour trong thời gian này");
+			return new ResponseEntity<>(new ObjectMapper().writeValueAsString(message), HttpStatus.BAD_REQUEST);
+		}
+
+		// check số lượng khách
+		Optional<Tour> tourOp = tourRepository.findById(bookingParam.getTour().getTourId());
+
+		if (tourOp.isPresent()) {
+			Tour tour = tourOp.get();
+			if (bookingParam.getNumGuest() > tour.getNumguest()) {
+				message.put("message", "Số lượng khách đặt quá giới hạn của tour.");
+				return new ResponseEntity<>(new ObjectMapper().writeValueAsString(message), HttpStatus.BAD_REQUEST);
+			}
+		}
 
 		BookingDTO saveBooking = bookingService.save(bookingParam);
 
@@ -104,7 +222,9 @@ public class BookingApi {
 			return new ResponseEntity<>(new ObjectMapper().writeValueAsString(response), HttpStatus.OK);
 
 		} else {
-			return new ResponseEntity<>("Đặt tour không thành công", HttpStatus.INTERNAL_SERVER_ERROR);
+			message.put("message", "Đặt tour không thành công.");
+			return new ResponseEntity<>(new ObjectMapper().writeValueAsString(message),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 	}
@@ -182,13 +302,10 @@ public class BookingApi {
 	}
 
 	// delete all booking
-	@DeleteMapping("/deleteAll")
-	private ResponseEntity<?> removeAllBooking() {
-
+	@DeleteMapping("/remove-all")
+	public ResponseEntity<?> removeAllBooking() {
 		bookingService.removeAllBooking();
-
-		return ResponseEntity.ok("xóa thành công tất cả các booking.");
-
+		return ResponseEntity.ok("XÓA THÀNH CÔNG.");
 	}
 
 	// delete booking tour
@@ -201,16 +318,14 @@ public class BookingApi {
 		}).orElseGet(() -> new ResponseEntity<>("Không tìm thấy thông tin booking!", HttpStatus.NOT_FOUND));
 	}
 
-	// update booking status
-	@PutMapping("/update/{bookingId}&{status}")
-	private ResponseEntity<?> updateBookingConfirm(@PathVariable("bookingId") UUID bookingId,
-			@PathVariable String status) {
+	// update booking confirm
+	@PutMapping("/update/{bookingId}&{confirm}")
+	public ResponseEntity<?> updateBookingConfirm(@PathVariable("bookingId") UUID bookingId,
+			@PathVariable("confirm") String confirm) {
 
-		bookingService.updateBookingConfirm(bookingId, status);
+		bookingService.updateBookingConfirm(bookingId, confirm);
 
-		// khi trạng thái thay đổi thì gưir thông báo hoặc email
-		return new ResponseEntity<>("Cập nhật trạng thái booking thành công.", HttpStatus.OK);
-
+		return ResponseEntity.ok("Cập nhật thành công." + confirm);
 	}
 
 }

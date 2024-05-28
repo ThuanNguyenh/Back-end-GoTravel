@@ -1,14 +1,9 @@
 package com.gotravel.gotravel.dto;
 
-import java.sql.Date;
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
-import com.gotravel.gotravel.entity.TourRule;
-
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -37,7 +32,10 @@ public class TourDTO {
 	private String detailAddress;
 
 	@NotNull(message = "vui lòng nhập giá dịch vụ")
-	private Float price;
+	private Float priceAdult;
+	
+	@NotNull(message = "vui lòng nhập giá dịch vụ")
+	private Float priceChildren;
 
 	private boolean isNull;
 
@@ -46,13 +44,10 @@ public class TourDTO {
 
 	private int discount;
 
-	@NotNull(message = "vui lòng nhập ngày bắt đầu")
-	private Date startDate;
+	@NotNull(message = "Vui lòng nhập thời gian của tour")
+	private int tourTime;
 
-	@NotNull(message = "vui lòng nhập ngày kết thúc")
-	private Date endDate;
-
-	private Date createAt;
+	private LocalDateTime createAt;
 
 	@NotNull(message = "Không có chủ sở hữu ")
 	private UserDTO owner;
@@ -68,6 +63,6 @@ public class TourDTO {
 	private List<RuleDTO> rules;
 
 	private List<ScheduleDTO> schedules;
-	
+
 	private List<Float> ratings;
 }

@@ -66,7 +66,7 @@ public class PaypalService {
 		redirectUrls.setReturnUrl(successUrl);
 		payment.setRedirectUrls(redirectUrls);
 
-		System.out.println("thong tin thanh toán: " + payment);
+//		System.out.println("thong tin thanh toán: " + payment);
 
 		// Tạo thanh toán trên PayPal và trả về đối tượng Payment đã được tạo
 		return payment.create(apiContext);
@@ -82,7 +82,7 @@ public class PaypalService {
 		
 		Payment executedPayment = payment.execute(apiContext, paymentExecute);
 
-		System.out.println("thong tin thanh toán 2: " + executedPayment);
+//		System.out.println("thong tin thanh toán 2: " + executedPayment);
 
 		return executedPayment;
 	}

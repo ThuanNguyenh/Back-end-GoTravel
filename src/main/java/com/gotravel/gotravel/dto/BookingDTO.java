@@ -4,8 +4,6 @@ import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.gotravel.gotravel.enums.ConfirmationBooking;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +17,7 @@ public class BookingDTO {
 	private UserDTO user;
 	private TourDTO tour;
 	private Date checkInDate;
+	private Date checkOutDate;
 	private String confirmation;
 	private UUID userId;
 	private UUID tourId;
@@ -26,7 +25,6 @@ public class BookingDTO {
 	private int numGuest;
 	private Double total;
 	private Boolean status;
-	private Date checkOutDate;
 	private Date dateBooking;
 	private Double price;
 	private String currency;

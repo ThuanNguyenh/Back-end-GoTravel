@@ -1,5 +1,6 @@
 package com.gotravel.gotravel.converter;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,9 @@ public class FeedbackConverter {
 			User user = userOp.get();
 			feedback.setUser(user);
 		}
+		
+		LocalDateTime today = LocalDateTime.now();
+		feedback.setCreateAt(today);
 		
 		return feedback;
 		

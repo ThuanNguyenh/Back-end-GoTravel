@@ -1,5 +1,7 @@
 package com.gotravel.gotravel.config;
 
+import java.util.UUID;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,5 +45,10 @@ public class ApplicationConfig {
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
+	
+	@Bean
+    public UUID uuid() {
+        return UUID.randomUUID();
+    }
 	
 }

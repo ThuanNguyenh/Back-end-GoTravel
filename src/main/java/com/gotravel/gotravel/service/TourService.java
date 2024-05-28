@@ -2,6 +2,7 @@ package com.gotravel.gotravel.service;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -186,8 +187,8 @@ public class TourService implements ITourService {
 			tourRules.add(listRule);
 		}
 
-		LocalDate today = LocalDate.now();
-		tour.setCreate_at(Date.valueOf(today));
+		LocalDateTime today = LocalDateTime.now();
+		tour.setCreate_at(today);
 		tour.setImages(imageList);
 		tour.setSchedules(schedules);
 		tour.setTourCategories(tourCategories);
@@ -213,11 +214,11 @@ public class TourService implements ITourService {
 			existingTour.setDistrict(tourUpdate.getDistrict());
 			existingTour.setWard(tourUpdate.getWard());
 			existingTour.setDetailAddress(tourUpdate.getDetailAddress());
-			existingTour.setPrice(tourUpdate.getPrice());
+			existingTour.setPriceAdult(tourUpdate.getPriceAdult());
+			existingTour.setPriceChildren(tourUpdate.getPriceChildren());
 			existingTour.setNumguest(tourUpdate.getNumguest());
 			existingTour.setDiscount(tourUpdate.getDiscount());
-			existingTour.setStartDate(tourUpdate.getStartDate());
-			existingTour.setEndDate(tourUpdate.getEndDate());
+			existingTour.setTourTime(tourUpdate.getTourTime());
 
 			checkUpdate(existingTour, updateTourDTO);
 

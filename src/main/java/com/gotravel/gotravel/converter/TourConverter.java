@@ -1,6 +1,9 @@
 package com.gotravel.gotravel.converter;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -56,9 +59,6 @@ public class TourConverter {
 	@Autowired
 	private UserRepository userRepository;
 
-	@Autowired
-	private FeedbackConverter feedbackConverter;
-
 	public TourDTO toDTO(Tour tour) {
 
 		TourDTO tourDTO = new TourDTO();
@@ -70,17 +70,15 @@ public class TourConverter {
 		tourDTO.setDetailAddress(tour.getDetailAddress());
 		tourDTO.setDescription(tour.getDescription());
 		tourDTO.setThumbnail(tour.getThumbnail());
-		tourDTO.setPrice(tour.getPrice());
+		tourDTO.setPriceAdult(tour.getPriceAdult());
+		tourDTO.setPriceChildren(tour.getPriceChildren());
 		tourDTO.setNumGuest(tour.getNumguest());
 		tourDTO.setDiscount(tour.getDiscount());
-		tourDTO.setStartDate(tour.getStartDate());
-		tourDTO.setEndDate(tour.getEndDate());
 		tourDTO.setCreateAt(tour.getCreate_at());
+		tourDTO.setTourTime(tour.getTourTime());
 
 		// thu thập các đánh giá
-		List<Float> allRatings = tour.getFeedbacks().stream()
-				.map(Feedback::getRating)
-				.collect(Collectors.toList());
+		List<Float> allRatings = tour.getFeedbacks().stream().map(Feedback::getRating).collect(Collectors.toList());
 		tourDTO.setRatings(allRatings);
 
 		// IMAGES
@@ -152,13 +150,14 @@ public class TourConverter {
 		tour.setDetailAddress(tourDTO.getDetailAddress());
 		tour.setDescription(tourDTO.getDescription());
 		tour.setThumbnail(tourDTO.getThumbnail());
-		tour.setPrice(tourDTO.getPrice());
+		tour.setPriceAdult(tourDTO.getPriceAdult());
+		tour.setPriceChildren(tourDTO.getPriceChildren());
 		tour.setNumguest(tourDTO.getNumGuest());
 		tour.setDiscount(tourDTO.getDiscount());
-		tour.setStartDate(tourDTO.getStartDate());
-		tour.setEndDate(tourDTO.getEndDate());
+		tour.setTourTime(tourDTO.getTourTime());
 		tour.setFeedbacks(new ArrayList<>());
-
+		
+	
 		Optional<User> optionalUser = userRepository.findById(tourDTO.getOwner().getUserId());
 
 		if (optionalUser.isPresent()) {

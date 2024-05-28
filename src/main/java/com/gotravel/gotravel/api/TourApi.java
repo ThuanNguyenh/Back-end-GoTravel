@@ -61,6 +61,17 @@ public class TourApi {
 		}
 	}
 
+	@GetMapping("/my-tour/{userId}")
+	public ResponseEntity<?> getAllTourOfUser(@PathVariable UUID userId) {
+		List<TourDTO> tours = tourService.getAllTourOfUser(userId);
+
+		if (tours != null && !tours.isEmpty()) {
+			return new ResponseEntity<>(tours, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@PostMapping("/add")
 	public ResponseEntity<?> addTour(@Valid @RequestBody TourDTO tourDTO) {
 		TourDTO tourSave = tourService.save(tourDTO);
@@ -73,8 +84,7 @@ public class TourApi {
 	}
 
 	@PutMapping("/update/{id}")
-	public ResponseEntity<?> updateTour(@PathVariable("id") UUID tourId,
-			@Valid @RequestBody TourDTO updateTourDTO) {
+	public ResponseEntity<?> updateTour(@PathVariable("id") UUID tourId, @Valid @RequestBody TourDTO updateTourDTO) {
 
 		Optional<Tour> tourOp = tourRepository.findById(tourId);
 		return tourOp.map(tour -> {
