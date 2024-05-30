@@ -1,6 +1,7 @@
 package com.gotravel.gotravel.api;
 
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,13 +9,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,6 +37,7 @@ import com.gotravel.gotravel.dto.BookingTourDateDTO;
 import com.gotravel.gotravel.dto.PaymentDTO;
 import com.gotravel.gotravel.entity.Booking;
 import com.gotravel.gotravel.entity.Tour;
+import com.gotravel.gotravel.enums.ConfirmationBooking;
 import com.gotravel.gotravel.repository.BookingResponsitory;
 import com.gotravel.gotravel.repository.TourRepository;
 import com.gotravel.gotravel.service.PaypalService;
@@ -40,28 +48,35 @@ import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
 
 import io.jsonwebtoken.io.IOException;
+import jakarta.mail.internet.ParseException;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/api/v1/booking")
 public class BookingApi {
 
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		dateFormat.setLenient(false);
+		binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
+	}
+
 	public static final String SUCCESS_URL = "/paypal/success";
 	public static final String CANCEL_URL = "/paypal/cancel";
 
 //	@Autowired
 	private final IBookingService bookingService;
-	
-	 @Autowired
-	    public BookingApi(IBookingService bookingService, BookingResponsitory bookingResponsitory, 
-	                      PaypalService service, IPaymentBillService paymentService, 
-	                      TourRepository tourRepository) {
-	        this.bookingService = bookingService;
-	        this.bookingResponsitory = bookingResponsitory;
-	        this.service = service;
-	        this.paymentService = paymentService;
-	        this.tourRepository = tourRepository;
-	    }
+
+	@Autowired
+	public BookingApi(IBookingService bookingService, BookingResponsitory bookingResponsitory, PaypalService service,
+			IPaymentBillService paymentService, TourRepository tourRepository) {
+		this.bookingService = bookingService;
+		this.bookingResponsitory = bookingResponsitory;
+		this.service = service;
+		this.paymentService = paymentService;
+		this.tourRepository = tourRepository;
+	}
 
 	@Autowired
 	private BookingResponsitory bookingResponsitory;
@@ -71,7 +86,7 @@ public class BookingApi {
 
 	@Autowired
 	PaypalService paypalService;
-	
+
 	private UUID bookingId;
 
 	@Autowired
@@ -162,23 +177,38 @@ public class BookingApi {
 
 	}
 
+	// LẤY RA TẤT CẢ BOOKING CỦA CÁC TOUR CỦA USER
 	// lấy ra danh sách chuyển đổi nhiều booking cùng 1 tour và cùng ngày bắt đầu
 	// thành 1 đối tượng mới
-	@GetMapping("/booking-tour-date/{userId}")
-	public ResponseEntity<?> returnAllBookingOfUserWithTourIdAndCheckIn(@PathVariable UUID userId) {
+	@GetMapping("/booking-tour-date/{userId}/filter")
+	public Page<BookingTourDateDTO> returnAllBookingOfUserWithTourIdAndCheckIn(@PathVariable UUID userId,
+			@RequestParam(required = false) String checkInDate, @RequestParam(required = false) String checkOutDate,
+			@RequestParam(required = false) ConfirmationBooking confirmation,
+			@RequestParam(required = false) String categoryName, @RequestParam(required = false) String keyword,
+			@RequestParam(required = false) UUID categoryId,
+			Pageable pageable) throws java.text.ParseException {
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date checkInDateFilter = null;
+		Date checkOutDateFilter = null;
+
+		if (checkInDate != null && !checkInDate.isEmpty()) {
+			checkInDateFilter = new Date(dateFormat.parse(checkInDate).getTime());
+		}
+		if (checkOutDate != null && !checkOutDate.isEmpty()) {
+			checkOutDateFilter = new Date(dateFormat.parse(checkOutDate).getTime());
+		}
 
 		// Gọi phương thức service để lấy danh sách BookingTourDateDTO của userId
-		List<BookingTourDateDTO> listBookings = bookingService.returnAllBookingOfUserWithTourIdAndCheckIn(userId);
+		return bookingService.returnAllBookingOfUserWithTourIdAndCheckIn(userId, checkInDateFilter, checkOutDateFilter,
+				confirmation, categoryName, keyword, categoryId, pageable);
 
-		// Kiểm tra nếu danh sách không rỗng
-		if (!listBookings.isEmpty()) {
-			// Trả về danh sách bookings cùng với mã trạng thái HTTP 200 (OK)
-			return new ResponseEntity<>(listBookings, HttpStatus.OK);
-		} else {
-			// Nếu danh sách rỗng, trả về thông báo lỗi cùng với mã trạng thái HTTP 404 (Not
-			// Found)
-			return new ResponseEntity<>("Không có dữ liệu.", HttpStatus.NOT_FOUND);
-		}
+	}
+
+	// lấy ra tất cả booking theo tourid và confirmation và đếm số
+	@GetMapping("/count-tour-confirm/{userId}&{confirmation}")
+	public int countTourWithConfirm(@PathVariable UUID userId, @PathVariable String confirmation) {
+		return bookingService.countToursByTourIdAndConfirmation(userId, confirmation);
 	}
 
 	// create booking
@@ -326,6 +356,30 @@ public class BookingApi {
 		bookingService.updateBookingConfirm(bookingId, confirm);
 
 		return ResponseEntity.ok("Cập nhật thành công." + confirm);
+	}
+
+	// FILTER
+	@GetMapping("/filter")
+	public List<BookingDTO> filterBookings(
+			@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") String checkInDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") String checkOutDate,
+//			@RequestParam(required = false) String category,
+			@RequestParam(required = false) ConfirmationBooking confirmation)
+			throws ParseException, java.text.ParseException {
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date checkIn = null;
+		Date checkOut = null;
+
+		if (checkInDate != null && !checkInDate.isEmpty()) {
+			checkIn = new Date(dateFormat.parse(checkInDate).getTime());
+		}
+
+		if (checkOutDate != null && !checkOutDate.isEmpty()) {
+			checkOut = new Date(dateFormat.parse(checkOutDate).getTime());
+		}
+
+		return bookingService.filterBookings(checkIn, checkOut, confirmation);
 	}
 
 }

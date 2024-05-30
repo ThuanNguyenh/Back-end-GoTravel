@@ -3,6 +3,7 @@ package com.gotravel.gotravel.entity;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,6 +17,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -61,5 +65,12 @@ public class Booking {
 	
 	@OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<PaymentBill> paymentBills;
+	
+	@ManyToMany
+    @JoinTable(
+    		name = "booking_category",
+    		joinColumns = @JoinColumn(name = "booking_id"),
+    		inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories;
 
 }

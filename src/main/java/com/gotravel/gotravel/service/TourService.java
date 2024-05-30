@@ -102,6 +102,14 @@ public class TourService implements ITourService {
 		return tours.stream().map(tourConverter::toDTO).collect(Collectors.toList());
 
 	}
+	
+	@Override
+	public long countToursByUserId(UUID userId) {
+	    // Sử dụng phương thức đã có để lấy tất cả tour của user
+	    List<Tour> tours = tourRepository.findAllTourByUserId(userId);
+	    // Trả về số lượng tour
+	    return tours.size();
+	}
 
 	@Override
 	public TourDTO findById(UUID id) {

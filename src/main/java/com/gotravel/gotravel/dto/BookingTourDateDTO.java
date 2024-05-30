@@ -2,6 +2,7 @@ package com.gotravel.gotravel.dto;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -26,5 +27,6 @@ public class BookingTourDateDTO {
 	private Date checkOutDate;
 	private Double totalPriceBooked;
 	private String confirmation;
+	private List<CategoryDTO> categories;
 
 }

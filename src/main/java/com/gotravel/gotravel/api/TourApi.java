@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -70,6 +71,12 @@ public class TourApi {
 		} else {
 			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
 		}
+	}
+
+	@GetMapping("/count/{userId}")
+	public ResponseEntity<Long> countToursByUserId(@PathVariable UUID userId) {
+		long count = tourService.countToursByUserId(userId);
+		return ResponseEntity.ok(count);
 	}
 
 	@PostMapping("/add")
