@@ -370,11 +370,11 @@ public class BookingService implements IBookingService {
 
 		// convert map value sang to list
 		List<BookingTourDateDTO> bookingTourDateList = new ArrayList<>();
-		
+
 		// Sắp xếp danh sách theo thời gian check-in mới nhất
 		bookingTourDateList = bookingSummaryMap.values().stream()
-		    .sorted(Comparator.comparing(BookingTourDateDTO::getCheckInDate).reversed())
-		    .collect(Collectors.toList());
+				.sorted(Comparator.comparing(BookingTourDateDTO::getCheckInDate).reversed())
+				.collect(Collectors.toList());
 
 		// Sử dụng các giá trị mới của page và pageSize từ tham số truy vấn
 		int currentPage = pageable.getPageNumber();
@@ -478,6 +478,45 @@ public class BookingService implements IBookingService {
 		List<Booking> bookings = bookingResponsitory.findAll(spec);
 
 		return bookings.stream().map(bookingConverter::toDTO).toList();
+	}
+
+	@Override
+	public Page<BookingDTO> returnAllMyBookingsFilter(UUID userId, ConfirmationBooking confirmation, Pageable pageable) {
+
+		List<Booking> bookings = bookingResponsitory.findAllByUserId(userId).stream()// lọc theo confirmation nếu có
+				.filter(booking -> confirmation == null || booking.getConfirmation().equals(confirmation))
+				.collect(Collectors.toList());
+
+		List<BookingDTO> bookingDTOs = bookings.stream().map(bookingConverter::toDTO).toList();
+
+		// Sử dụng các giá trị mới của page và pageSize từ tham số truy vấn
+				int currentPage = pageable.getPageNumber();
+				int pageSize = pageable.getPageSize();
+
+				// Tính toán lại vị trí bắt đầu và kết thúc của dữ liệu dựa trên các giá trị mới
+				// này
+				int start = currentPage * pageSize;
+				int end = Math.min(start + pageSize, bookingDTOs.size());
+
+				// Kiểm tra và xử lý trường hợp đặc biệt
+				if (bookingDTOs.isEmpty() || start >= bookingDTOs.size()) {
+					// Trường hợp danh sách trống hoặc page lớn hơn số trang có sẵn
+					return new PageImpl<>(Collections.emptyList(), pageable, 0);
+				}
+
+				// Đảm bảo rằng các giá trị tính toán được nằm trong phạm vi hợp lệ của danh
+				// sách dữ liệu
+				start = Math.min(start, bookingDTOs.size() - 1);
+				end = Math.min(end, bookingDTOs.size());
+
+				// Trích xuất danh sách con từ danh sách dữ liệu với các giá trị mới của page và
+				// pageSize
+				List<BookingDTO> paginatedList = bookingDTOs.subList(start, end);
+
+				pageable = PageRequest.of(currentPage, 10);
+
+				// Trả về kết quả của trang phân trang với dữ liệu được cập nhật
+				return new PageImpl<>(paginatedList, pageable, bookingDTOs.size());
 	}
 
 }

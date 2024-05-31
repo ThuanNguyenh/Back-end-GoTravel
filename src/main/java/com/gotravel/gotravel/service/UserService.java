@@ -116,7 +116,7 @@ public class UserService implements IUserService {
 
 			user.setUserName(userUpdate.getUsername());
 			user.setEmail(userUpdate.getEmail());
-			user.setPassword(userUpdate.getPassword());
+//			user.setPassword(userUpdate.getPassword());
 			user.setPhone(userUpdate.getPhone());
 			user.setProvince(userUpdate.getProvince());
 			user.setDistrict(userUpdate.getDistrict());

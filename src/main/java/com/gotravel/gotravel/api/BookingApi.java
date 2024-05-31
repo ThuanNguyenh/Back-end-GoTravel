@@ -177,6 +177,18 @@ public class BookingApi {
 
 	}
 
+	// lấy ra tất cả booking của user và filter theo confirmation
+	@GetMapping("/my-book/{userId}/filter")
+	public Page<BookingDTO> returnAllMyBookingFilter(@PathVariable UUID userId,
+
+			@RequestParam(required = false) ConfirmationBooking confirmation, Pageable pageable)
+			throws java.text.ParseException {
+
+		// Gọi phương thức service để lấy danh sách BookingTourDateDTO của userId
+		return bookingService.returnAllMyBookingsFilter(userId, confirmation, pageable);
+
+	}
+
 	// LẤY RA TẤT CẢ BOOKING CỦA CÁC TOUR CỦA USER
 	// lấy ra danh sách chuyển đổi nhiều booking cùng 1 tour và cùng ngày bắt đầu
 	// thành 1 đối tượng mới
@@ -185,8 +197,7 @@ public class BookingApi {
 			@RequestParam(required = false) String checkInDate, @RequestParam(required = false) String checkOutDate,
 			@RequestParam(required = false) ConfirmationBooking confirmation,
 			@RequestParam(required = false) String categoryName, @RequestParam(required = false) String keyword,
-			@RequestParam(required = false) UUID categoryId,
-			Pageable pageable) throws java.text.ParseException {
+			@RequestParam(required = false) UUID categoryId, Pageable pageable) throws java.text.ParseException {
 
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Date checkInDateFilter = null;
@@ -226,9 +237,21 @@ public class BookingApi {
 			return new ResponseEntity<>(new ObjectMapper().writeValueAsString(message), HttpStatus.BAD_REQUEST);
 		}
 
-		// check số lượng khách
+		/////
 		Optional<Tour> tourOp = tourRepository.findById(bookingParam.getTour().getTourId());
 
+		// check trạng thái
+		if (tourOp.isPresent()) {
+			Tour tour = tourOp.get();
+			if (!tour.getStatus().booleanValue()) {
+				// Xử lý từ chối đặt tour ở đây
+				// Ví dụ: Trả về thông báo hoặc thực hiện hành động khác
+				message.put("message", "Tour hiện không hoạt động.");
+				return new ResponseEntity<>(new ObjectMapper().writeValueAsString(message), HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		// check số lượng khách
 		if (tourOp.isPresent()) {
 			Tour tour = tourOp.get();
 			if (bookingParam.getNumGuest() > tour.getNumguest()) {

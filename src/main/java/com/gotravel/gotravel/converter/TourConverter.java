@@ -1,22 +1,14 @@
 package com.gotravel.gotravel.converter;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.gotravel.gotravel.dto.CategoryDTO;
-import com.gotravel.gotravel.dto.FeedbackDTO;
 import com.gotravel.gotravel.dto.ImageDTO;
 import com.gotravel.gotravel.dto.RuleDTO;
 import com.gotravel.gotravel.dto.ScheduleDTO;
@@ -30,10 +22,7 @@ import com.gotravel.gotravel.entity.TourCategory;
 import com.gotravel.gotravel.entity.TourRule;
 import com.gotravel.gotravel.entity.TourUtilities;
 import com.gotravel.gotravel.entity.User;
-import com.gotravel.gotravel.repository.ImageRepository;
 import com.gotravel.gotravel.repository.UserRepository;
-
-import lombok.extern.java.Log;
 
 @Component
 public class TourConverter {
@@ -76,6 +65,7 @@ public class TourConverter {
 		tourDTO.setDiscount(tour.getDiscount());
 		tourDTO.setCreateAt(tour.getCreate_at());
 		tourDTO.setTourTime(tour.getTourTime());
+		tourDTO.setStatus(tour.getStatus());
 
 		// thu thập các đánh giá
 		List<Float> allRatings = tour.getFeedbacks().stream().map(Feedback::getRating).collect(Collectors.toList());
@@ -156,8 +146,7 @@ public class TourConverter {
 		tour.setDiscount(tourDTO.getDiscount());
 		tour.setTourTime(tourDTO.getTourTime());
 		tour.setFeedbacks(new ArrayList<>());
-		
-	
+
 		Optional<User> optionalUser = userRepository.findById(tourDTO.getOwner().getUserId());
 
 		if (optionalUser.isPresent()) {

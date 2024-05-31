@@ -28,26 +28,24 @@ public class BookingSpecification {
 			return criteriaBuilder.equal(tourCategoryJoin.get("category").get("categoryId"), categoryId);
 		};
 	}
+
 	public static Specification<Booking> hasCategory(String categoryName) {
-	    return (root, query, criteriaBuilder) -> {
-	        Join<Booking, Category> categoryJoin = root.join("categories");
-	        return criteriaBuilder.equal(categoryJoin.get("categoryName"), categoryName);
-	    };
+		return (root, query, criteriaBuilder) -> {
+			Join<Booking, Category> categoryJoin = root.join("categories");
+			return criteriaBuilder.equal(categoryJoin.get("categoryName"), categoryName);
+		};
 	}
 
 	public static Specification<Booking> hasConfirmation(ConfirmationBooking confirmation) {
 		return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("confirmation"), confirmation);
 	}
-	
-	public static Specification<Booking> searchByKeyword(String keyword) {
-	    return (root, query, criteriaBuilder) -> {
-	        String keywordLike = "%" + keyword + "%";
-	        return criteriaBuilder.or(
-	            criteriaBuilder.like(root.get("tour").get("tourName"), keywordLike),
-	            criteriaBuilder.like(root.get("tour").get("province"), keywordLike)
-	        );
-	    };
-	}
 
+	public static Specification<Booking> searchByKeyword(String keyword) {
+		return (root, query, criteriaBuilder) -> {
+			String keywordLike = "%" + keyword + "%";
+			return criteriaBuilder.or(criteriaBuilder.like(root.get("tour").get("tourName"), keywordLike),
+					criteriaBuilder.like(root.get("tour").get("province"), keywordLike));
+		};
+	}
 
 }

@@ -3,6 +3,7 @@ package com.gotravel.gotravel.api;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -55,23 +56,21 @@ public class TourApi {
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getTourById(@PathVariable("id") UUID id) {
 		TourDTO tour = tourService.findById(id);
-		if (!tour.isNull()) {
+		if (tour != null) {
 			return new ResponseEntity<>(tour, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>("Tour không tồn tại.", HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@GetMapping("/my-tour/{userId}")
-	public ResponseEntity<?> getAllTourOfUser(@PathVariable UUID userId) {
-		List<TourDTO> tours = tourService.getAllTourOfUser(userId);
+	@GetMapping("/my-tour/{userId}/status")
+	public List<TourDTO> getAllTourOfUser(@PathVariable UUID userId,
+	        @RequestParam(required = false) Boolean status) {
+	    return tourService.getAllTourOfUserFilter(userId, status);
 
-		if (tours != null && !tours.isEmpty()) {
-			return new ResponseEntity<>(tours, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("Dữ liệu không tồn tại.", HttpStatus.NOT_FOUND);
-		}
+	    
 	}
+
 
 	@GetMapping("/count/{userId}")
 	public ResponseEntity<Long> countToursByUserId(@PathVariable UUID userId) {
@@ -88,6 +87,16 @@ public class TourApi {
 			return new ResponseEntity<>("Thêm không thành công!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
+	}
+
+	@PutMapping("/{tourId}/update-status")
+	public ResponseEntity<String> updateTourStatus(@PathVariable UUID tourId, @RequestParam Boolean status) {
+		try {
+			tourService.updateTourStatus(tourId, status);
+			return ResponseEntity.ok("Cập nhật trạng thái tour thành công.");
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
 	}
 
 	@PutMapping("/update/{id}")

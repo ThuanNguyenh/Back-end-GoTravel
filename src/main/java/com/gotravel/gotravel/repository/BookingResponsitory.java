@@ -18,6 +18,7 @@ public interface BookingResponsitory extends JpaRepository<Booking, UUID>, JpaSp
 	List<Booking> findAllByTourTourIdAndConfirmationOrderByCreateAtDesc(UUID tourId, ConfirmationBooking confirmation);
 
 	List<Booking> findAllByUserId(UUID userId);
+	
 
 	List<Booking> findAllByTourTourIdAndUserId(UUID tourId, UUID userId);
 

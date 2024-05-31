@@ -1,7 +1,5 @@
 package com.gotravel.gotravel.service;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +8,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import com.gotravel.gotravel.converter.ScheduleConverter;
-import com.gotravel.gotravel.converter.ScheduleDetailConverter;
 import com.gotravel.gotravel.converter.TourConverter;
 import com.gotravel.gotravel.dto.CategoryDTO;
 import com.gotravel.gotravel.dto.ImageDTO;
@@ -102,13 +99,13 @@ public class TourService implements ITourService {
 		return tours.stream().map(tourConverter::toDTO).collect(Collectors.toList());
 
 	}
-	
+
 	@Override
 	public long countToursByUserId(UUID userId) {
-	    // Sử dụng phương thức đã có để lấy tất cả tour của user
-	    List<Tour> tours = tourRepository.findAllTourByUserId(userId);
-	    // Trả về số lượng tour
-	    return tours.size();
+		// Sử dụng phương thức đã có để lấy tất cả tour của user
+		List<Tour> tours = tourRepository.findAllTourByUserId(userId);
+		// Trả về số lượng tour
+		return tours.size();
 	}
 
 	@Override
@@ -458,7 +455,7 @@ public class TourService implements ITourService {
 
 	}
 	// end check update
-	
+
 	@Override
 	public void remove(UUID id) {
 
@@ -469,5 +466,42 @@ public class TourService implements ITourService {
 		}
 
 	}
+
+	@Override
+	public void updateTourStatus(UUID tourId, boolean status) {
+
+		Optional<Tour> tourOp = tourRepository.findById(tourId);
+
+		if (!tourOp.isPresent()) {
+			throw new RuntimeException("Tour with ID " + tourId + "not found.");
+		}
+
+		Tour tour = tourOp.get();
+
+		if (tour.getStatus() != status) {
+			tour.setStatus(status);
+			tourRepository.save(tour);
+		}
+
+	}
+
+	@Override
+	public List<TourDTO> getAllTourOfUserFilter(UUID userId, Boolean status) {
+	    List<Tour> tours = tourRepository.findAllTourByUserId(userId);
+	    List<Tour> filteredTours;
+
+	    if (status != null) {
+	        filteredTours = tours.stream()
+	            .filter(tour -> status ? tour.getStatus() : true)
+	            .collect(Collectors.toList());
+	    } else {
+	        filteredTours = tours;
+	    }
+
+	    return filteredTours.stream().map(tourConverter::toDTO).collect(Collectors.toList());
+	}
+
+
+
 
 }

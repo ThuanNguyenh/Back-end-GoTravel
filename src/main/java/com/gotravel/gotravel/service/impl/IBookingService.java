@@ -27,11 +27,13 @@ public interface IBookingService extends IGeneralService<BookingDTO> {
 
 	public void removeAllBooking();
 
-	public List<UUID> updateBookingStatusWithSchedule() throws IOException;
+	public List<UUID> updateBookingStatusWithSchedule() throws IOException; // tự động set lại sau mỗi 5 phút
 
 	public List<BookingDTO> findAllBookingsForTourAndUser(UUID tourId, UUID userId);
 
 	public List<BookingDTO> findAllBookingsByTourAndCheckIn(UUID tourId, Date checkIn);
+
+	public Page<BookingDTO> returnAllMyBookingsFilter(UUID userId, ConfirmationBooking confirmation, Pageable pageable);
 
 	public Page<BookingTourDateDTO> returnAllBookingOfUserWithTourIdAndCheckIn(UUID userId, Date checkInDateFilter,
 			Date checkOutDateFilter, ConfirmationBooking confirmation, String categoryName, String keyword,

@@ -37,7 +37,7 @@ public class TourDTO {
 	@NotNull(message = "vui lòng nhập giá dịch vụ")
 	private Float priceChildren;
 
-	private boolean isNull;
+	private Boolean status;
 
 	@NotNull(message = "vui lòng nhập số lượng khách")
 	private int numGuest;
